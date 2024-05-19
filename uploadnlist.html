@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bootstrap File Upload</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-5">
+    <h1 class="mb-4">Upload MP3 File</h1>
+    <div class="form-group">
+      <input type="file" id="fileInput" class="form-control" accept=".mp3">
+    </div>
+    <button id="uploadButton" class="btn btn-primary">Upload</button>
+    <button id="listFilesButton" class="btn btn-secondary ml-2">List Uploaded Files</button>
+
+    <h2 class="mt-5">Uploaded Files</h2>
+    <ul id="fileList" class="list-group mt-3"></ul>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      $('#uploadButton').click(async function() {
+        const fileInput = $('#fileInput')[0];
+        const file = fileInput.files[0];
+        if (!file) {
+          alert('Please select a file to upload');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+          const response = await axios.post('http://localhost:8080/upload', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+          console.log(response.data);
+          alert('File uploaded successfully');
+          fetchFiles(); // Refresh the list after upload
+        } catch (error) {
+          console.error('Error uploading file:', error);
+          alert('Error uploading file');
+        }
+      });
+
+      $('#listFilesButton').click(fetchFiles);
+
+      async function fetchFiles() {
+        try {
+          const response = await axios.get('http://localhost:8080/files');
+          const files = response.data.files;
+          const fileList = $('#fileList');
+          fileList.empty();
+          files.forEach(file => {
+            fileList.append(`<li class="list-group-item">${file}</li>`);
+          });
+        } catch (error) {
+          console.error('Error fetching files:', error);
+          alert('Error fetching files');
+        }
+      }
+
+      // Fetch the list of files when the page loads
+      fetchFiles();
+    });
+  </script>
+</body>
+</html>
